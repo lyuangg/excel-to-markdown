@@ -28,6 +28,19 @@ go build -o excel-to-markdown
 
 Download the latest release from the [Releases](https://github.com/lyuangg/excel-to-markdown/releases) page.
 
+#### macOS Security Note
+
+If you see a security warning when running the downloaded binary on macOS:
+
+1. **Quick fix**: Remove the quarantine attribute:
+   ```bash
+   xattr -d com.apple.quarantine excel-to-markdown
+   ```
+
+2. **Alternative**: Right-click the file → Open → Click "Open" in the security dialog (first time only)
+
+This is a macOS security feature (Gatekeeper) that applies to all unsigned binaries. The binary is safe to use.
+
 ## 📖 Usage
 
 ### Basic Usage

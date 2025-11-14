@@ -28,6 +28,19 @@ go build -o excel-to-markdown
 
 从 [Releases](https://github.com/lyuangg/excel-to-markdown/releases) 页面下载最新版本。
 
+#### macOS 安全提示
+
+如果在 macOS 上运行下载的二进制文件时看到安全警告：
+
+1. **快速解决**：移除隔离属性：
+   ```bash
+   xattr -d com.apple.quarantine excel-to-markdown
+   ```
+
+2. **替代方法**：右键点击文件 → 打开 → 在安全对话框中点击"打开"（仅首次需要）
+
+这是 macOS 的安全机制（Gatekeeper），适用于所有未签名的二进制文件。该二进制文件是安全的。
+
 ## 📖 使用方法
 
 ### 基本用法
