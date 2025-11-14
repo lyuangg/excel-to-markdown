@@ -25,6 +25,10 @@ excel-to-markdown.darwin
 excel-to-markdown.linux
 excel-to-markdown.windows
 
+# Release builds
+dist/
+release/
+
 # IDE - VSCode
 .vscode/
 *.code-workspace

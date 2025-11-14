@@ -1,0 +1,81 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      
+      - name: Get version from tag
+        id: tag
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Build binaries
+        run: |
+          mkdir -p release
+          
+          # macOS
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o excel-to-markdown-darwin-amd64 .
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o excel-to-markdown-darwin-arm64 .
+          
+          # Linux
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o excel-to-markdown-linux-amd64 .
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o excel-to-markdown-linux-arm64 .
+          
+          # Windows
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o excel-to-markdown-windows-amd64.exe .
+      
+      - name: Create release packages
+        run: |
+          VERSION=${{ steps.tag.outputs.VERSION }}
+          
+          # macOS amd64
+          mkdir -p excel-to-markdown-${VERSION}-darwin-amd64
+          cp excel-to-markdown-darwin-amd64 excel-to-markdown-${VERSION}-darwin-amd64/excel-to-markdown
+          cp README.md README.zh.md LICENSE excel-to-markdown-${VERSION}-darwin-amd64/
+          tar -czf release/excel-to-markdown-${VERSION}-darwin-amd64.tar.gz excel-to-markdown-${VERSION}-darwin-amd64
+          
+          # macOS arm64
+          mkdir -p excel-to-markdown-${VERSION}-darwin-arm64
+          cp excel-to-markdown-darwin-arm64 excel-to-markdown-${VERSION}-darwin-arm64/excel-to-markdown
+          cp README.md README.zh.md LICENSE excel-to-markdown-${VERSION}-darwin-arm64/
+          tar -czf release/excel-to-markdown-${VERSION}-darwin-arm64.tar.gz excel-to-markdown-${VERSION}-darwin-arm64
+          
+          # Linux amd64
+          mkdir -p excel-to-markdown-${VERSION}-linux-amd64
+          cp excel-to-markdown-linux-amd64 excel-to-markdown-${VERSION}-linux-amd64/excel-to-markdown
+          cp README.md README.zh.md LICENSE excel-to-markdown-${VERSION}-linux-amd64/
+          tar -czf release/excel-to-markdown-${VERSION}-linux-amd64.tar.gz excel-to-markdown-${VERSION}-linux-amd64
+          
+          # Linux arm64
+          mkdir -p excel-to-markdown-${VERSION}-linux-arm64
+          cp excel-to-markdown-linux-arm64 excel-to-markdown-${VERSION}-linux-arm64/excel-to-markdown
+          cp README.md README.zh.md LICENSE excel-to-markdown-${VERSION}-linux-arm64/
+          tar -czf release/excel-to-markdown-${VERSION}-linux-arm64.tar.gz excel-to-markdown-${VERSION}-linux-arm64
+          
+          # Windows amd64
+          mkdir -p excel-to-markdown-${VERSION}-windows-amd64
+          cp excel-to-markdown-windows-amd64.exe excel-to-markdown-${VERSION}-windows-amd64/excel-to-markdown.exe
+          cp README.md README.zh.md LICENSE excel-to-markdown-${VERSION}-windows-amd64/
+          cd excel-to-markdown-${VERSION}-windows-amd64
+          zip -r ../release/excel-to-markdown-${VERSION}-windows-amd64.zip .
+          cd ..
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
