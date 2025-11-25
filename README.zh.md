@@ -6,11 +6,12 @@
 
 ## ✨ 功能特性
 
-- ✅ **自动检测格式**：支持 **TSV**（制表符分隔）和 **CSV**（逗号分隔）格式
+- ✅ **自动检测格式**：支持 **TSV**（制表符分隔）、**CSV**（逗号分隔）和 **Column**（空格对齐）格式
 - ✅ **剪贴板集成**：支持从剪贴板读取和写入（跨平台）
 - ✅ **列对齐**：通过 `^l`、`^c`、`^r` 标记支持左对齐、居中、右对齐
 - ✅ **自动列宽**：自动计算最佳列宽
 - ✅ **CSV 处理**：正确处理引号、转义和包含逗号的字段
+- ✅ **Column 命令支持**：自动检测和解析 `column` 命令对齐后的输出
 - ✅ **双语支持**：帮助信息和错误信息支持中英文
 - ✅ **跨平台**：支持 macOS、Linux 和 Windows
 
@@ -97,6 +98,18 @@ cat data.csv | ./excel-to-markdown -copy
 | cat    | 18lb   | calico |
 ```
 
+#### 示例 4：Column 命令输出
+
+转换空格对齐的表格（例如来自 `column -t` 命令的输出）：
+
+```bash
+# 使用 column 命令输出
+printf "Name\tAge\tCity\nJohn\t25\tNew York\nJane\t30\tLondon" | column -t | ./excel-to-markdown
+
+# 或直接使用空格对齐的数据
+printf "Name    Age    City\nJohn    25     NYC\nJane    30     LA\n" | ./excel-to-markdown
+```
+
 ## 🔧 支持的格式
 
 ### TSV（制表符分隔值）
@@ -122,7 +135,16 @@ printf '"Name","Description","Price"\n"Apple","Red, sweet fruit","$1.50"\n' | ./
 printf '"Name","Quote"\n"John","He said ""Hello"""\n' | ./excel-to-markdown
 ```
 
-工具会自动检测输入格式（通过检查是否包含引号、逗号或制表符）。
+### Column（空格对齐格式）
+
+支持空格对齐的表格（例如 Unix `column` 命令的输出）。
+
+```bash
+# Column 对齐格式（多个空格）
+printf "Name    Age    City\nJohn    25     NYC\nJane    30     LA\n" | ./excel-to-markdown
+```
+
+工具会自动检测输入格式（通过检查是否包含引号、逗号、制表符或多个连续空格）。
 
 ## 🎯 对齐标记说明
 

@@ -75,6 +75,12 @@ func TestDetectFormat(t *testing.T) {
 		{"混合（优先TSV）", "Name\tTitle,Email", "tsv"},
 		{"只有逗号", "Name,Title", "csv"},
 		{"空字符串", "", "tsv"},
+		{"Column格式（多个空格对齐）", "Name    Age    City\nJohn    25     NYC", "column"},
+		{"Column格式（三列）", "Product      Price    Stock\nApple       1.50     100", "column"},
+		{"Column格式（多行）", "Name    Age    City\nJohn    25     NYC\nJane    30     LA", "column"},
+		{"单个空格不是Column格式", "Name Age City", "tsv"},
+		{"有逗号时不识别为Column", "Name    Age,City", "csv"},
+		{"有制表符时不识别为Column", "Name    Age\tCity", "tsv"},
 	}
 
 	for _, tt := range tests {
@@ -186,6 +192,146 @@ func TestParseCSV(t *testing.T) {
 	}
 }
 
+func TestLooksLikeColumnFormat(t *testing.T) {
+	converter := NewConverter()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			"标准Column格式（多行对齐）",
+			"Name    Age    City\nJohn    25     NYC\nJane    30     LA",
+			true,
+		},
+		{
+			"两行对齐",
+			"Name    Age    City\nJohn    25     NYC",
+			true,
+		},
+		{
+			"列数一致",
+			"Product      Price    Stock\nApple       1.50     100\nBanana      0.80     200",
+			true,
+		},
+		{
+			"列数允许1列差异",
+			"Name    Age    City\nJohn    25",
+			true,
+		},
+		{
+			"单行不是Column格式",
+			"Name    Age    City",
+			false,
+		},
+		{
+			"空字符串",
+			"",
+			false,
+		},
+		{
+			"只有一行数据",
+			"Name    Age    City",
+			false,
+		},
+		{
+			"列数差异太大",
+			"Name    Age    City\nJohn",
+			false,
+		},
+		{
+			"包含空行但仍有有效数据",
+			"Name    Age    City\n\nJohn    25     NYC",
+			true,
+		},
+		{
+			"只有单个空格（不是Column格式）",
+			"Name Age City\nJohn 25 NYC",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := converter.looksLikeColumnFormat(tt.input)
+			if result != tt.expected {
+				t.Errorf("looksLikeColumnFormat(%q) = %v, 期望 %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestParseColumn(t *testing.T) {
+	converter := NewConverter()
+
+	tests := []struct {
+		name     string
+		input    string
+		expected [][]string
+	}{
+		{
+			"简单Column格式",
+			"Name    Age    City\nJohn    25     NYC",
+			[][]string{{"Name", "Age", "City"}, {"John", "25", "NYC"}},
+		},
+		{
+			"多行Column格式",
+			"Name    Age    City\nJohn    25     NYC\nJane    30     LA",
+			[][]string{
+				{"Name", "Age", "City"},
+				{"John", "25", "NYC"},
+				{"Jane", "30", "LA"},
+			},
+		},
+		{
+			"包含空行",
+			"Name    Age    City\n\nJohn    25     NYC",
+			[][]string{{"Name", "Age", "City"}, {"John", "25", "NYC"}},
+		},
+		{
+			"不同空格数量",
+			"Product      Price    Stock\nApple       1.50     100\nBanana      0.80     200",
+			[][]string{
+				{"Product", "Price", "Stock"},
+				{"Apple", "1.50", "100"},
+				{"Banana", "0.80", "200"},
+			},
+		},
+		{
+			"Windows换行符",
+			"Name    Age    City\r\nJohn    25     NYC",
+			[][]string{{"Name", "Age", "City"}, {"John", "25", "NYC"}},
+		},
+		{
+			"字段内容包含单个空格",
+			"Name        Full Name\nJohn        John Doe\nJane        Jane Smith",
+			[][]string{
+				{"Name", "Full Name"},
+				{"John", "John Doe"},
+				{"Jane", "Jane Smith"},
+			},
+		},
+		{
+			"列宽不一致",
+			"Short    Very Long Column    Medium\nA        B                    C",
+			[][]string{
+				{"Short", "Very Long Column", "Medium"},
+				{"A", "B", "C"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := converter.ParseColumn(tt.input)
+			if !equalRows(result, tt.expected) {
+				t.Errorf("ParseColumn(%q) = %v, 期望 %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestParseTable(t *testing.T) {
 	converter := NewConverter()
 
@@ -205,6 +351,22 @@ func TestParseTable(t *testing.T) {
 			"自动检测CSV",
 			"Name,Title\nJane,CEO",
 			[][]string{{"Name", "Title"}, {"Jane", "CEO"}},
+			false,
+		},
+		{
+			"自动检测Column格式",
+			"Name    Age    City\nJohn    25     NYC",
+			[][]string{{"Name", "Age", "City"}, {"John", "25", "NYC"}},
+			false,
+		},
+		{
+			"自动检测Column格式（多行）",
+			"Product      Price    Stock\nApple       1.50     100\nBanana      0.80     200",
+			[][]string{
+				{"Product", "Price", "Stock"},
+				{"Apple", "1.50", "100"},
+				{"Banana", "0.80", "200"},
+			},
 			false,
 		},
 	}

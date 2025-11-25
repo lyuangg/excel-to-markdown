@@ -6,11 +6,12 @@ A command-line tool to convert Excel table data (TSV/CSV) to Markdown table form
 
 ## ✨ Features
 
-- ✅ **Auto-detect format**: Supports both **TSV** (tab-separated) and **CSV** (comma-separated) formats
+- ✅ **Auto-detect format**: Supports **TSV** (tab-separated), **CSV** (comma-separated), and **Column** (space-aligned) formats
 - ✅ **Clipboard integration**: Read from and write to clipboard (cross-platform)
 - ✅ **Column alignment**: Support left, center, and right alignment via `^l`, `^c`, `^r` markers
 - ✅ **Auto column width**: Automatically calculates optimal column widths
 - ✅ **CSV handling**: Properly handles quotes, escaping, and fields containing commas
+- ✅ **Column command support**: Automatically detects and parses `column` command aligned output
 - ✅ **Bilingual support**: Help messages and error messages in both English and Chinese
 - ✅ **Cross-platform**: Works on macOS, Linux, and Windows
 
@@ -97,6 +98,18 @@ After conversion:
 | cat    | 18lb   | calico |
 ```
 
+#### Example 4: Column Command Output
+
+Convert space-aligned tables (e.g., from `column -t` command):
+
+```bash
+# Using column command output
+printf "Name\tAge\tCity\nJohn\t25\tNew York\nJane\t30\tLondon" | column -t | ./excel-to-markdown
+
+# Or directly with space-aligned data
+printf "Name    Age    City\nJohn    25     NYC\nJane    30     LA\n" | ./excel-to-markdown
+```
+
 ## 🔧 Supported Formats
 
 ### TSV (Tab-Separated Values)
@@ -122,7 +135,16 @@ printf '"Name","Description","Price"\n"Apple","Red, sweet fruit","$1.50"\n' | ./
 printf '"Name","Quote"\n"John","He said ""Hello"""\n' | ./excel-to-markdown
 ```
 
-The tool automatically detects the format by checking for quotes, commas, or tabs.
+### Column (Space-Aligned)
+
+Supports space-aligned tables (e.g., output from Unix `column` command).
+
+```bash
+# Column-aligned format (multiple spaces)
+printf "Name    Age    City\nJohn    25     NYC\nJane    30     LA\n" | ./excel-to-markdown
+```
+
+The tool automatically detects the format by checking for quotes, commas, tabs, or multiple consecutive spaces.
 
 ## 🎯 Alignment Markers
 

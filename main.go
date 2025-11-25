@@ -11,9 +11,13 @@ import (
 )
 
 // looksLikeTable 检查数据是否看起来像表格
-// 简单检查：如果包含制表符或逗号，可能是表格数据
+// 检查：如果包含制表符、逗号或多个连续空格，可能是表格数据
 func looksLikeTable(data string) bool {
-	return strings.Contains(data, "\t") || strings.Contains(data, ",")
+	if strings.Contains(data, "\t") || strings.Contains(data, ",") {
+		return true
+	}
+	// 检查是否包含多个连续空格（column 命令对齐格式）
+	return strings.Contains(data, "  ")
 }
 
 // getLanguage detects the preferred language (zh or en)
